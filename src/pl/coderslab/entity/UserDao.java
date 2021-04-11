@@ -14,18 +14,18 @@ public class UserDao {
     private static final String DISPLAY_USERS = "SELECT * FROM users";
     private static final String SHOW_PASSWORD = "SELECT password FROM users WHERE id = ?";
 
-    // metoda hashujaca hasło użytkownika
+    // hash method
     public String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
-    ////DODATKOWO - metoda sprawdzająca czy zahashowane haslo jest zgodne z podanym przez uzytkownika
+    // checking if hashed password is same to given by user
     public boolean verifyHash(String password, String hash){
         return BCrypt.checkpw(password,hash);
     }
 
 
-    // tworzenie oraz dodawanie nowego uzytkownika
+    // create user
     public User createUser(User user) {
         try (Connection connection = DbUtil.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(CREATE_USER, Statement.RETURN_GENERATED_KEYS);
@@ -33,7 +33,7 @@ public class UserDao {
             statement.setString(2, user.getEmail());
             statement.setString(3, hashPassword(user.getPassword()));
             statement.executeUpdate();
-            //Pobieramy wstawiony do bazy identyfikator, a następnie ustawiamy id obiektu user.
+
             ResultSet resultSet = statement.getGeneratedKeys();
             if (resultSet.next()) {
                 user.setId(resultSet.getInt(1));
@@ -45,7 +45,7 @@ public class UserDao {
         return null;
     }
 
-    // wyświetlenie użytkownika za pomocą podanego id
+    // display user by id
     public User readUser(int userId) {
         try (Connection connection = DbUtil.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(READ_USER);
@@ -65,13 +65,13 @@ public class UserDao {
         return null;
     }
 
-    // updateUser - zmiana danych użytkownika
+    // update user
     public void updateUser(User user) {
         try (Connection connection = DbUtil.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(UPDATE_USER);
             statement.setString(1, user.getUserName());
             statement.setString(2, user.getEmail());
-            statement.setString(3, this.hashPassword(user.getPassword()));
+            statement.setString(3, hashPassword(user.getPassword()));
             statement.setInt(4, user.getId());
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -79,7 +79,7 @@ public class UserDao {
         }
     }
 
-    // deleteUser - usuwanie użytkownika
+    // delete user
     public User deleteUser(int userId) {
         try (Connection connection = DbUtil.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(DELETE_USER);
@@ -91,11 +91,11 @@ public class UserDao {
         return null;
     }
 
-    //metoda pomocnicza, która poprzez kopiowanie tablic pozwoli nam poradzić sobie ze zwiększającym rozmiarem danych
+    // additional method enlarging array list if necessary
     private User[] addToArray(User u, User[] users) {
-        User[] newArraysOfUsers = Arrays.copyOf(users, users.length + 1); // Tworzymy kopię tablicy powiększoną o 1.
-        newArraysOfUsers[users.length] = u; // Dodajemy obiekt na ostatniej pozycji.
-        return newArraysOfUsers; // Zwracamy nową tablicę.
+        User[] newArraysOfUsers = Arrays.copyOf(users, users.length + 1);
+        newArraysOfUsers[users.length] = u;
+        return newArraysOfUsers;
     }
 
     public User[] displayAll() {
